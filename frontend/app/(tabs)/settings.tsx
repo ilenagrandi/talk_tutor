@@ -13,6 +13,8 @@ export default function SettingsScreen() {
   const { logout } = useAuth();
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   
+  i18n.locale = language;
+  
   const colors = {
     background: isDarkMode ? '#111827' : '#f9fafb',
     card: isDarkMode ? '#1f2937' : '#fff',
