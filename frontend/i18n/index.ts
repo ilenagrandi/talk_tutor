@@ -455,7 +455,8 @@ const translations = {
 const i18n = new I18n(translations);
 
 // Set the locale once at the beginning of your app.
-i18n.locale = Localization.locale;
+const deviceLocale = Localization.locale || Localization.locales?.[0] || 'en';
+i18n.locale = deviceLocale.startsWith('es') ? 'es' : 'en';
 i18n.enableFallback = true;
 i18n.defaultLocale = 'en';
 
