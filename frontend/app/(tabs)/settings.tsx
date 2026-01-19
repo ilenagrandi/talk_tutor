@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,17 @@ import { useStore } from '../../store/useStore';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, updateSubscriptionStatus } = useStore();
+  const { user, updateSubscriptionStatus, isDarkMode, toggleDarkMode } = useStore();
+  
+  const colors = {
+    background: isDarkMode ? '#111827' : '#f9fafb',
+    card: isDarkMode ? '#1f2937' : '#fff',
+    text: isDarkMode ? '#f9fafb' : '#1f2937',
+    textSecondary: isDarkMode ? '#9ca3af' : '#6b7280',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    primary: '#6366f1',
+    primaryLight: isDarkMode ? '#4f46e5' : '#eef2ff',
+  };
 
   const handleSubscriptionManagement = () => {
     if (user?.isSubscribed) {
@@ -23,97 +33,119 @@ export default function SettingsScreen() {
 
   const settingsOptions = [
     {
-      section: 'Account',
+      section: 'Apariencia',
+      items: [
+        {
+          icon: 'moon',
+          label: 'Modo Oscuro',
+          subtitle: isDarkMode ? 'Activado' : 'Desactivado',
+          onPress: () => {},
+          hasSwitch: true,
+        },
+      ],
+    },
+    {
+      section: 'Cuenta',
       items: [
         {
           icon: 'person-circle',
-          label: 'Profile',
-          subtitle: 'Manage your account',
-          onPress: () => Alert.alert('Coming Soon', 'Profile management coming soon'),
+          label: 'Perfil',
+          subtitle: 'Administra tu cuenta',
+          onPress: () => Alert.alert('Próximamente', 'Gestión de perfil próximamente'),
         },
         {
           icon: 'card',
-          label: 'Subscription',
-          subtitle: user?.isSubscribed ? 'Active subscription' : 'Get premium access',
+          label: 'Suscripción',
+          subtitle: user?.isSubscribed ? 'Suscripción activa' : 'Obtén acceso premium',
           onPress: handleSubscriptionManagement,
           badge: user?.isSubscribed ? 'Premium' : null,
         },
       ],
     },
     {
-      section: 'Support',
+      section: 'Soporte',
       items: [
         {
           icon: 'help-circle',
-          label: 'Help & FAQ',
-          subtitle: 'Get answers to your questions',
-          onPress: () => Alert.alert('Help', 'Help center coming soon'),
+          label: 'Ayuda y FAQ',
+          subtitle: 'Obtén respuestas a tus preguntas',
+          onPress: () => Alert.alert('Ayuda', 'Centro de ayuda próximamente'),
         },
         {
           icon: 'mail',
-          label: 'Contact Support',
-          subtitle: 'We are here to help',
-          onPress: () => Alert.alert('Contact', 'support@talktutor.app'),
+          label: 'Contactar Soporte',
+          subtitle: 'Estamos aquí para ayudar',
+          onPress: () => Alert.alert('Contacto', 'support@talktutor.app'),
         },
       ],
     },
     {
-      section: 'About',
+      section: 'Acerca de',
       items: [
         {
           icon: 'shield-checkmark',
-          label: 'Privacy Policy',
-          subtitle: 'How we protect your data',
-          onPress: () => Alert.alert('Privacy', 'Privacy policy coming soon'),
+          label: 'Política de Privacidad',
+          subtitle: 'Cómo protegemos tus datos',
+          onPress: () => Alert.alert('Privacidad', 'Política de privacidad próximamente'),
         },
         {
           icon: 'document-text',
-          label: 'Terms of Service',
-          subtitle: 'Usage terms and conditions',
-          onPress: () => Alert.alert('Terms', 'Terms of service coming soon'),
+          label: 'Términos de Servicio',
+          subtitle: 'Términos y condiciones de uso',
+          onPress: () => Alert.alert('Términos', 'Términos de servicio próximamente'),
         },
         {
           icon: 'information-circle',
-          label: 'About TalkTutor',
-          subtitle: 'Version 1.0.0',
-          onPress: () => Alert.alert('TalkTutor', 'Your AI Communication Coach'),
+          label: 'Acerca de TalkTutor',
+          subtitle: 'Versión 1.0.0',
+          onPress: () => Alert.alert('TalkTutor', 'Tu Coach de Comunicación con IA'),
         },
       ],
     },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>Manage your preferences</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
+        <Text style={styles.headerTitle}>Configuración</Text>
+        <Text style={styles.headerSubtitle}>Administra tus preferencias</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {settingsOptions.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.section}</Text>
-            {section.items.map((item, itemIndex) => (
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{section.section}</Text>
+            {section.items.map((item: any, itemIndex) => (
               <TouchableOpacity
                 key={itemIndex}
-                style={styles.settingItem}
+                style={[styles.settingItem, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={item.onPress}
+                disabled={item.hasSwitch}
               >
-                <View style={styles.settingIcon}>
-                  <Ionicons name={item.icon as any} size={24} color="#6366f1" />
+                <View style={[styles.settingIcon, { backgroundColor: colors.primaryLight }]}>
+                  <Ionicons name={item.icon as any} size={24} color={colors.primary} />
                 </View>
                 <View style={styles.settingContent}>
                   <View style={styles.settingHeader}>
-                    <Text style={styles.settingLabel}>{item.label}</Text>
+                    <Text style={[styles.settingLabel, { color: colors.text }]}>{item.label}</Text>
                     {item.badge && (
                       <View style={styles.badge}>
                         <Text style={styles.badgeText}>{item.badge}</Text>
                       </View>
                     )}
                   </View>
-                  <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                  <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                {item.hasSwitch ? (
+                  <Switch
+                    value={isDarkMode}
+                    onValueChange={toggleDarkMode}
+                    trackColor={{ false: '#d1d5db', true: colors.primary }}
+                    thumbColor={'#fff'}
+                  />
+                ) : (
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                )}
               </TouchableOpacity>
             ))}
           </View>
