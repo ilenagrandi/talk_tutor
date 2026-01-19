@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,40 +12,43 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStore } from '../store/useStore';
-import { mockActivateSubscription } from '../services/api';
+import { getSubscriptionPlans, activateSubscription } from '../services/api';
+import i18n from '../i18n';
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { user, updateSubscriptionStatus } = useStore();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly');
+  const { user, isDarkMode, language } = useStore();
+  const [selectedPlan, setSelectedPlan] = useState<string>('standard');
+  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [plans, setPlans] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  i18n.locale = language;
+  
+  const colors = {
+    background: isDarkMode ? '#111827' : '#fff',
+    card: isDarkMode ? '#1f2937' : '#fff',
+    text: isDarkMode ? '#f9fafb' : '#1f2937',
+    textSecondary: isDarkMode ? '#9ca3af' : '#6b7280',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    primary: '#6366f1',
+  };
 
-  const plans = [
-    {
-      id: 'monthly',
-      name: 'Monthly',
-      price: '$9.99',
-      period: '/month',
-      savings: null,
-    },
-    {
-      id: 'annual',
-      name: 'Annual',
-      price: '$79.99',
-      period: '/year',
-      savings: 'Save 33%',
-    },
-  ];
+  useEffect(() => {
+    loadPlans();
+  }, []);
 
-  const features = [
-    'Unlimited conversation analysis',
-    'AI-powered response suggestions',
-    'Image and text analysis',
-    'All communication tones',
-    'All goal types',
-    'History & saved analyses',
-    'Priority support',
-  ];
+  const loadPlans = async () => {
+    try {
+      const response = await getSubscriptionPlans();
+      setPlans(response.plans);
+    } catch (error) {
+      console.error('Error loading plans:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubscribe = async () => {
     if (!user) return;
@@ -53,12 +56,10 @@ export default function SubscriptionScreen() {
     setIsProcessing(true);
 
     try {
-      // Mock subscription activation
-      await mockActivateSubscription(user.id);
-      updateSubscriptionStatus(true);
+      await activateSubscription(selectedPlan, selectedPeriod);
 
       Alert.alert(
-        'Success!',
+        i18n.t('success'),
         'Your subscription has been activated (mock). In production, this would process payment through RevenueCat.',
         [
           {
@@ -68,71 +69,132 @@ export default function SubscriptionScreen() {
         ]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to process subscription');
+      Alert.alert(i18n.t('error'), error.message || 'Failed to process subscription');
     } finally {
       setIsProcessing(false);
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const plansList = [
+    { id: 'standard', name: 'Standard', color: '#6366f1' },
+    { id: 'premium', name: 'Premium', color: '#8b5cf6' },
+    { id: 'pro', name: 'Pro', color: '#ec4899' },
+  ];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color="#1f2937" />
+          <Ionicons name="close" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Choose Your Plan</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{i18n.t('subscription.title')}</Text>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <Text style={styles.heroIcon}>✨</Text>
-          <Text style={styles.heroTitle}>Unlock Premium Features</Text>
-          <Text style={styles.heroSubtitle}>
-            Get unlimited AI-powered conversation coaching
+          <Ionicons name="star" size={64} color={colors.primary} />
+          <Text style={[styles.heroTitle, { color: colors.text }]}>{i18n.t('subscription.unlock')}</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
+            {i18n.t('subscription.subtitle')}
           </Text>
         </View>
 
-        <View style={styles.plansContainer}>
-          {plans.map((plan) => (
-            <TouchableOpacity
-              key={plan.id}
-              style={[
-                styles.planCard,
-                selectedPlan === plan.id && styles.planCardActive,
-              ]}
-              onPress={() => setSelectedPlan(plan.id as 'monthly' | 'annual')}
-            >
-              {plan.savings && (
-                <View style={styles.savingsBadge}>
-                  <Text style={styles.savingsText}>{plan.savings}</Text>
-                </View>
-              )}
-              <View style={styles.planHeader}>
-                <Text style={styles.planName}>{plan.name}</Text>
-                {selectedPlan === plan.id && (
-                  <Ionicons name="checkmark-circle" size={24} color="#10b981" />
-                )}
-              </View>
-              <View style={styles.planPricing}>
-                <Text style={styles.planPrice}>{plan.price}</Text>
-                <Text style={styles.planPeriod}>{plan.period}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.periodSelector}>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              selectedPeriod === 'monthly' && { backgroundColor: colors.primary, borderColor: colors.primary }
+            ]}
+            onPress={() => setSelectedPeriod('monthly')}
+          >
+            <Text style={[
+              styles.periodText,
+              { color: selectedPeriod === 'monthly' ? '#fff' : colors.text }
+            ]}>
+              {i18n.t('subscription.monthly')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              selectedPeriod === 'annual' && { backgroundColor: colors.primary, borderColor: colors.primary }
+            ]}
+            onPress={() => setSelectedPeriod('annual')}
+          >
+            <Text style={[
+              styles.periodText,
+              { color: selectedPeriod === 'annual' ? '#fff' : colors.text }
+            ]}>
+              {i18n.t('subscription.annual')}
+            </Text>
+            <View style={styles.saveBadge}>
+              <Text style={styles.saveText}>{i18n.t('subscription.save')}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>What you get:</Text>
-          {features.map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-              <Text style={styles.featureText}>{feature}</Text>
-            </View>
-          ))}
+        <View style={styles.plansContainer}>
+          {plansList.map((plan) => {
+            const planData = plans?.[plan.id];
+            if (!planData) return null;
+            
+            const price = selectedPeriod === 'monthly' 
+              ? `$${planData.price_monthly}`
+              : `$${planData.price_annual}`;
+            
+            return (
+              <TouchableOpacity
+                key={plan.id}
+                style={[
+                  styles.planCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  selectedPlan === plan.id && { borderColor: plan.color, borderWidth: 3 }
+                ]}
+                onPress={() => setSelectedPlan(plan.id)}
+              >
+                <View style={styles.planHeader}>
+                  <View>
+                    <Text style={[styles.planName, { color: colors.text }]}>{planData.name}</Text>
+                    <View style={styles.planPricing}>
+                      <Text style={[styles.planPrice, { color: colors.text }]}>{price}</Text>
+                      <Text style={[styles.planPeriod, { color: colors.textSecondary }]}>
+                        /{selectedPeriod === 'monthly' ? 'month' : 'year'}
+                      </Text>
+                    </View>
+                  </View>
+                  {selectedPlan === plan.id && (
+                    <Ionicons name="checkmark-circle" size={32} color={plan.color} />
+                  )}
+                </View>
+
+                <View style={styles.featuresContainer}>
+                  {planData.features.map((feature: string, index: number) => (
+                    <View key={index} style={styles.featureItem}>
+                      <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                      <Text style={[styles.featureText, { color: colors.textSecondary }]}>{feature}</Text>
+                    </View>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <TouchableOpacity
-          style={[styles.subscribeButton, isProcessing && styles.subscribeButtonDisabled]}
+          style={[styles.subscribeButton, { backgroundColor: colors.primary }, isProcessing && styles.subscribeButtonDisabled]}
           onPress={handleSubscribe}
           disabled={isProcessing}
         >
@@ -141,22 +203,16 @@ export default function SubscriptionScreen() {
           ) : (
             <>
               <Text style={styles.subscribeButtonText}>
-                Subscribe Now
+                {i18n.t('subscription.subscribeNow')}
               </Text>
               <Ionicons name="arrow-forward" size={20} color="#fff" />
             </>
           )}
         </TouchableOpacity>
 
-        <Text style={styles.disclaimer}>
-          By subscribing, you agree to our Terms of Service and Privacy Policy. Cancel anytime.
+        <Text style={[styles.disclaimer, { color: colors.textSecondary }]}>
+          {i18n.t('subscription.disclaimer')}
         </Text>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Note: This is a mock subscription for testing purposes. In production, this would integrate with RevenueCat for real payments through App Store and Google Play.
-          </Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -165,22 +221,25 @@ export default function SubscriptionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   closeButton: {
-    marginRight: 16,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   content: {
     flex: 1,
@@ -190,63 +249,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
-  heroIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
   heroTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1f2937',
+    marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
   },
-  plansContainer: {
-    marginTop: 24,
-    marginBottom: 32,
+  periodSelector: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
   },
-  planCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+  periodButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    alignItems: 'center',
     position: 'relative',
   },
-  planCardActive: {
-    borderColor: '#6366f1',
-    backgroundColor: '#eef2ff',
+  periodText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
-  savingsBadge: {
+  saveBadge: {
     position: 'absolute',
     top: -8,
-    right: 16,
+    right: -8,
     backgroundColor: '#10b981',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 12,
   },
-  savingsText: {
+  saveText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
+  },
+  plansContainer: {
+    gap: 16,
+    marginBottom: 24,
+  },
+  planCard: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
   },
   planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   planName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    marginBottom: 8,
   },
   planPricing: {
     flexDirection: 'row',
@@ -255,40 +318,31 @@ const styles = StyleSheet.create({
   planPrice: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   planPeriod: {
     fontSize: 16,
-    color: '#6b7280',
     marginLeft: 4,
   },
-  featuresSection: {
-    marginBottom: 24,
-  },
-  featuresTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 16,
+  featuresContainer: {
+    gap: 12,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 8,
   },
   featureText: {
-    fontSize: 16,
-    color: '#374151',
-    marginLeft: 12,
+    fontSize: 14,
+    flex: 1,
   },
   subscribeButton: {
-    backgroundColor: '#6366f1',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    gap: 8,
   },
   subscribeButtonDisabled: {
     opacity: 0.6,
@@ -297,24 +351,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    marginRight: 8,
   },
   disclaimer: {
     fontSize: 12,
-    color: '#9ca3af',
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  footer: {
-    backgroundColor: '#fef3c7',
-    borderRadius: 12,
-    padding: 16,
     marginBottom: 32,
-  },
-  footerText: {
-    fontSize: 13,
-    color: '#92400e',
-    textAlign: 'center',
     lineHeight: 18,
   },
 });
