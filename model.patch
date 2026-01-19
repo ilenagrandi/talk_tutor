@@ -1,0 +1,355 @@
+diff --git a/frontend/app/(tabs)/settings.tsx b/frontend/app/(tabs)/settings.tsx
+index ae0b68a..81e565c 100644
+--- a/frontend/app/(tabs)/settings.tsx
++++ b/frontend/app/(tabs)/settings.tsx
+@@ -1,13 +1,19 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
++import React, { useState } from 'react';
++import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch, Modal } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+ import { Ionicons } from '@expo/vector-icons';
+ import { useRouter } from 'expo-router';
+ import { useStore } from '../../store/useStore';
++import { useAuth } from '../../context/AuthContext';
++import i18n from '../../i18n';
+ 
+ export default function SettingsScreen() {
+   const router = useRouter();
+-  const { user, updateSubscriptionStatus, isDarkMode, toggleDarkMode } = useStore();
++  const { user, isDarkMode, toggleDarkMode, language, setLanguage } = useStore();
++  const { logout } = useAuth();
++  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
++  
++  i18n.locale = language;
+   
+   const colors = {
+     background: isDarkMode ? '#111827' : '#f9fafb',
+@@ -19,11 +25,34 @@ export default function SettingsScreen() {
+     primaryLight: isDarkMode ? '#4f46e5' : '#eef2ff',
+   };
+ 
++  const languages = [
++    { code: 'en', name: 'English', flag: '🇺🇸' },
++    { code: 'es', name: 'Español', flag: '🇪🇸' },
++  ];
++
++  const handleLogout = () => {
++    Alert.alert(
++      i18n.t('settings.logout'),
++      'Are you sure you want to log out?',
++      [
++        { text: i18n.t('cancel'), style: 'cancel' },
++        {
++          text: i18n.t('settings.logout'),
++          style: 'destructive',
++          onPress: async () => {
++            await logout();
++            router.replace('/login');
++          },
++        },
++      ]
++    );
++  };
++
+   const handleSubscriptionManagement = () => {
+-    if (user?.isSubscribed) {
++    if (user?.subscription_plan) {
+       Alert.alert(
+-        'Subscription Active',
+-        'Your subscription is currently active. In production, this would open subscription management.',
++        i18n.t('settings.subscription'),
++        `Current plan: ${user.subscription_plan}. In production, this would open subscription management.`,
+         [{ text: 'OK' }]
+       );
+     } else {
+@@ -31,74 +60,100 @@ export default function SettingsScreen() {
+     }
+   };
+ 
++  const handleLanguageChange = async (langCode: string) => {
++    await setLanguage(langCode);
++    setShowLanguagePicker(false);
++    i18n.locale = langCode;
++  };
++
++  const getCurrentLanguageName = () => {
++    const lang = languages.find(l => l.code === language);
++    return lang ? `${lang.flag} ${lang.name}` : 'English';
++  };
++
+   const settingsOptions = [
+     {
+-      section: 'Apariencia',
++      section: i18n.t('settings.appearance'),
+       items: [
+         {
+           icon: 'moon',
+-          label: 'Modo Oscuro',
+-          subtitle: isDarkMode ? 'Activado' : 'Desactivado',
++          label: i18n.t('settings.darkMode'),
++          subtitle: isDarkMode ? i18n.t('settings.darkModeOn') : i18n.t('settings.darkModeOff'),
+           onPress: () => {},
+           hasSwitch: true,
+         },
++        {
++          icon: 'language',
++          label: i18n.t('settings.language'),
++          subtitle: getCurrentLanguageName(),
++          onPress: () => setShowLanguagePicker(true),
++        },
+       ],
+     },
+     {
+-      section: 'Cuenta',
++      section: i18n.t('settings.account'),
+       items: [
+         {
+           icon: 'person-circle',
+-          label: 'Perfil',
+-          subtitle: 'Administra tu cuenta',
+-          onPress: () => Alert.alert('Próximamente', 'Gestión de perfil próximamente'),
++          label: i18n.t('settings.profile'),
++          subtitle: user?.email || i18n.t('settings.profileDesc'),
++          onPress: () => Alert.alert(i18n.t('settings.profile'), `Logged in as: ${user?.email}`),
+         },
+         {
+           icon: 'card',
+-          label: 'Suscripción',
+-          subtitle: user?.isSubscribed ? 'Suscripción activa' : 'Obtén acceso premium',
++          label: i18n.t('settings.subscription'),
++          subtitle: user?.subscription_plan 
++            ? `${user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)} plan`
++            : i18n.t('settings.subscriptionInactive'),
+           onPress: handleSubscriptionManagement,
+-          badge: user?.isSubscribed ? 'Premium' : null,
++          badge: user?.subscription_plan ? 'Premium' : null,
++        },
++        {
++          icon: 'log-out',
++          label: i18n.t('settings.logout'),
++          subtitle: 'Sign out from your account',
++          onPress: handleLogout,
++          isDestructive: true,
+         },
+       ],
+     },
+     {
+-      section: 'Soporte',
++      section: i18n.t('settings.support'),
+       items: [
+         {
+           icon: 'help-circle',
+-          label: 'Ayuda y FAQ',
+-          subtitle: 'Obtén respuestas a tus preguntas',
+-          onPress: () => Alert.alert('Ayuda', 'Centro de ayuda próximamente'),
++          label: i18n.t('settings.help'),
++          subtitle: i18n.t('settings.helpDesc'),
++          onPress: () => Alert.alert(i18n.t('settings.help'), 'Help center coming soon'),
+         },
+         {
+           icon: 'mail',
+-          label: 'Contactar Soporte',
+-          subtitle: 'Estamos aquí para ayudar',
+-          onPress: () => Alert.alert('Contacto', 'support@talktutor.app'),
++          label: i18n.t('settings.contact'),
++          subtitle: i18n.t('settings.contactDesc'),
++          onPress: () => Alert.alert(i18n.t('settings.contact'), 'support@talktutor.app'),
+         },
+       ],
+     },
+     {
+-      section: 'Acerca de',
++      section: i18n.t('settings.about'),
+       items: [
+         {
+           icon: 'shield-checkmark',
+-          label: 'Política de Privacidad',
+-          subtitle: 'Cómo protegemos tus datos',
+-          onPress: () => Alert.alert('Privacidad', 'Política de privacidad próximamente'),
++          label: i18n.t('settings.privacy'),
++          subtitle: i18n.t('settings.privacyDesc'),
++          onPress: () => Alert.alert(i18n.t('settings.privacy'), 'View privacy policy'),
+         },
+         {
+           icon: 'document-text',
+-          label: 'Términos de Servicio',
+-          subtitle: 'Términos y condiciones de uso',
+-          onPress: () => Alert.alert('Términos', 'Términos de servicio próximamente'),
++          label: i18n.t('settings.terms'),
++          subtitle: i18n.t('settings.termsDesc'),
++          onPress: () => Alert.alert(i18n.t('settings.terms'), 'View terms of service'),
+         },
+         {
+           icon: 'information-circle',
+-          label: 'Acerca de TalkTutor',
+-          subtitle: 'Versión 1.0.0',
+-          onPress: () => Alert.alert('TalkTutor', 'Tu Coach de Comunicación con IA'),
++          label: i18n.t('settings.aboutApp'),
++          subtitle: i18n.t('settings.version'),
++          onPress: () => Alert.alert('TalkTutor', 'Your AI Communication Coach'),
+         },
+       ],
+     },
+@@ -107,8 +162,8 @@ export default function SettingsScreen() {
+   return (
+     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+       <View style={[styles.header, { backgroundColor: colors.primary }]}>
+-        <Text style={styles.headerTitle}>Configuración</Text>
+-        <Text style={styles.headerSubtitle}>Administra tus preferencias</Text>
++        <Text style={styles.headerTitle}>{i18n.t('settings.title')}</Text>
++        <Text style={styles.headerSubtitle}>{i18n.t('settings.subtitle')}</Text>
+       </View>
+ 
+       <ScrollView style={styles.content}>
+@@ -122,12 +177,18 @@ export default function SettingsScreen() {
+                 onPress={item.onPress}
+                 disabled={item.hasSwitch}
+               >
+-                <View style={[styles.settingIcon, { backgroundColor: colors.primaryLight }]}>
+-                  <Ionicons name={item.icon as any} size={24} color={colors.primary} />
++                <View style={[styles.settingIcon, { backgroundColor: item.isDestructive ? '#fee2e2' : colors.primaryLight }]}>
++                  <Ionicons 
++                    name={item.icon as any} 
++                    size={24} 
++                    color={item.isDestructive ? '#ef4444' : colors.primary} 
++                  />
+                 </View>
+                 <View style={styles.settingContent}>
+                   <View style={styles.settingHeader}>
+-                    <Text style={[styles.settingLabel, { color: colors.text }]}>{item.label}</Text>
++                    <Text style={[styles.settingLabel, { color: item.isDestructive ? '#ef4444' : colors.text }]}>
++                      {item.label}
++                    </Text>
+                     {item.badge && (
+                       <View style={styles.badge}>
+                         <Text style={styles.badgeText}>{item.badge}</Text>
+@@ -151,6 +212,35 @@ export default function SettingsScreen() {
+           </View>
+         ))}
+       </ScrollView>
++
++      {/* Language Picker Modal */}
++      <Modal visible={showLanguagePicker} animationType="slide" transparent>
++        <View style={styles.modalOverlay}>
++          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
++            <View style={styles.modalHeader}>
++              <Text style={[styles.modalTitle, { color: colors.text }]}>{i18n.t('settings.language')}</Text>
++              <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
++                <Ionicons name="close" size={24} color={colors.textSecondary} />
++              </TouchableOpacity>
++            </View>
++            <ScrollView>
++              {languages.map((lang) => (
++                <TouchableOpacity
++                  key={lang.code}
++                  style={[styles.languageItem, { backgroundColor: language === lang.code ? colors.primaryLight : 'transparent' }]}
++                  onPress={() => handleLanguageChange(lang.code)}
++                >
++                  <Text style={styles.languageFlag}>{lang.flag}</Text>
++                  <Text style={[styles.languageName, { color: colors.text }]}>{lang.name}</Text>
++                  {language === lang.code && (
++                    <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
++                  )}
++                </TouchableOpacity>
++              ))}
++            </ScrollView>
++          </View>
++        </View>
++      </Modal>
+     </SafeAreaView>
+   );
+ }
+@@ -158,10 +248,8 @@ export default function SettingsScreen() {
+ const styles = StyleSheet.create({
+   container: {
+     flex: 1,
+-    backgroundColor: '#f9fafb',
+   },
+   header: {
+-    backgroundColor: '#6366f1',
+     padding: 24,
+     paddingBottom: 32,
+   },
+@@ -185,27 +273,23 @@ const styles = StyleSheet.create({
+   sectionTitle: {
+     fontSize: 14,
+     fontWeight: '600',
+-    color: '#6b7280',
+     textTransform: 'uppercase',
+     letterSpacing: 1,
+     marginBottom: 12,
+     paddingHorizontal: 4,
+   },
+   settingItem: {
+-    backgroundColor: '#fff',
+     borderRadius: 12,
+     padding: 16,
+     flexDirection: 'row',
+     alignItems: 'center',
+     marginBottom: 8,
+     borderWidth: 1,
+-    borderColor: '#e5e7eb',
+   },
+   settingIcon: {
+     width: 48,
+     height: 48,
+     borderRadius: 24,
+-    backgroundColor: '#eef2ff',
+     justifyContent: 'center',
+     alignItems: 'center',
+     marginRight: 12,
+@@ -221,11 +305,9 @@ const styles = StyleSheet.create({
+   settingLabel: {
+     fontSize: 16,
+     fontWeight: '600',
+-    color: '#1f2937',
+   },
+   settingSubtitle: {
+     fontSize: 14,
+-    color: '#6b7280',
+   },
+   badge: {
+     backgroundColor: '#10b981',
+@@ -239,4 +321,41 @@ const styles = StyleSheet.create({
+     fontSize: 12,
+     fontWeight: '600',
+   },
++  modalOverlay: {
++    flex: 1,
++    backgroundColor: 'rgba(0, 0, 0, 0.5)',
++    justifyContent: 'flex-end',
++  },
++  modalContent: {
++    borderTopLeftRadius: 24,
++    borderTopRightRadius: 24,
++    padding: 24,
++    maxHeight: '50%',
++  },
++  modalHeader: {
++    flexDirection: 'row',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++    marginBottom: 24,
++  },
++  modalTitle: {
++    fontSize: 20,
++    fontWeight: 'bold',
++  },
++  languageItem: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    padding: 16,
++    borderRadius: 12,
++    marginBottom: 8,
++  },
++  languageFlag: {
++    fontSize: 32,
++    marginRight: 16,
++  },
++  languageName: {
++    fontSize: 18,
++    fontWeight: '600',
++    flex: 1,
++  },
+ });
