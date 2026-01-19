@@ -73,72 +73,87 @@ export default function SettingsScreen() {
 
   const settingsOptions = [
     {
-      section: 'Apariencia',
+      section: i18n.t('settings.appearance'),
       items: [
         {
           icon: 'moon',
-          label: 'Modo Oscuro',
-          subtitle: isDarkMode ? 'Activado' : 'Desactivado',
+          label: i18n.t('settings.darkMode'),
+          subtitle: isDarkMode ? i18n.t('settings.darkModeOn') : i18n.t('settings.darkModeOff'),
           onPress: () => {},
           hasSwitch: true,
         },
+        {
+          icon: 'language',
+          label: i18n.t('settings.language'),
+          subtitle: getCurrentLanguageName(),
+          onPress: () => setShowLanguagePicker(true),
+        },
       ],
     },
     {
-      section: 'Cuenta',
+      section: i18n.t('settings.account'),
       items: [
         {
           icon: 'person-circle',
-          label: 'Perfil',
-          subtitle: 'Administra tu cuenta',
-          onPress: () => Alert.alert('Próximamente', 'Gestión de perfil próximamente'),
+          label: i18n.t('settings.profile'),
+          subtitle: user?.email || i18n.t('settings.profileDesc'),
+          onPress: () => Alert.alert(i18n.t('settings.profile'), `Logged in as: ${user?.email}`),
         },
         {
           icon: 'card',
-          label: 'Suscripción',
-          subtitle: user?.isSubscribed ? 'Suscripción activa' : 'Obtén acceso premium',
+          label: i18n.t('settings.subscription'),
+          subtitle: user?.subscription_plan 
+            ? `${user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)} plan`
+            : i18n.t('settings.subscriptionInactive'),
           onPress: handleSubscriptionManagement,
-          badge: user?.isSubscribed ? 'Premium' : null,
+          badge: user?.subscription_plan ? 'Premium' : null,
+        },
+        {
+          icon: 'log-out',
+          label: i18n.t('settings.logout'),
+          subtitle: 'Sign out from your account',
+          onPress: handleLogout,
+          isDestructive: true,
         },
       ],
     },
     {
-      section: 'Soporte',
+      section: i18n.t('settings.support'),
       items: [
         {
           icon: 'help-circle',
-          label: 'Ayuda y FAQ',
-          subtitle: 'Obtén respuestas a tus preguntas',
-          onPress: () => Alert.alert('Ayuda', 'Centro de ayuda próximamente'),
+          label: i18n.t('settings.help'),
+          subtitle: i18n.t('settings.helpDesc'),
+          onPress: () => Alert.alert(i18n.t('settings.help'), 'Help center coming soon'),
         },
         {
           icon: 'mail',
-          label: 'Contactar Soporte',
-          subtitle: 'Estamos aquí para ayudar',
-          onPress: () => Alert.alert('Contacto', 'support@talktutor.app'),
+          label: i18n.t('settings.contact'),
+          subtitle: i18n.t('settings.contactDesc'),
+          onPress: () => Alert.alert(i18n.t('settings.contact'), 'support@talktutor.app'),
         },
       ],
     },
     {
-      section: 'Acerca de',
+      section: i18n.t('settings.about'),
       items: [
         {
           icon: 'shield-checkmark',
-          label: 'Política de Privacidad',
-          subtitle: 'Cómo protegemos tus datos',
-          onPress: () => Alert.alert('Privacidad', 'Política de privacidad próximamente'),
+          label: i18n.t('settings.privacy'),
+          subtitle: i18n.t('settings.privacyDesc'),
+          onPress: () => Alert.alert(i18n.t('settings.privacy'), 'View privacy policy'),
         },
         {
           icon: 'document-text',
-          label: 'Términos de Servicio',
-          subtitle: 'Términos y condiciones de uso',
-          onPress: () => Alert.alert('Términos', 'Términos de servicio próximamente'),
+          label: i18n.t('settings.terms'),
+          subtitle: i18n.t('settings.termsDesc'),
+          onPress: () => Alert.alert(i18n.t('settings.terms'), 'View terms of service'),
         },
         {
           icon: 'information-circle',
-          label: 'Acerca de TalkTutor',
-          subtitle: 'Versión 1.0.0',
-          onPress: () => Alert.alert('TalkTutor', 'Tu Coach de Comunicación con IA'),
+          label: i18n.t('settings.aboutApp'),
+          subtitle: i18n.t('settings.version'),
+          onPress: () => Alert.alert('TalkTutor', 'Your AI Communication Coach'),
         },
       ],
     },
