@@ -162,8 +162,8 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <Text style={styles.headerTitle}>Configuración</Text>
-        <Text style={styles.headerSubtitle}>Administra tus preferencias</Text>
+        <Text style={styles.headerTitle}>{i18n.t('settings.title')}</Text>
+        <Text style={styles.headerSubtitle}>{i18n.t('settings.subtitle')}</Text>
       </View>
 
       <ScrollView style={styles.content}>
