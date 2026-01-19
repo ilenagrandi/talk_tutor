@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
@@ -10,15 +11,34 @@ const api = axios.create({
   },
 });
 
+// Add auth token to all requests
+api.interceptors.request.use(async (config) => {
+  const token = await AsyncStorage.getItem('session_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Session expired, clear token
+      await AsyncStorage.removeItem('session_token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export interface AnalyzeTextRequest {
-  user_id: string;
   conversation_text: string;
   tone: string;
   goal: string;
 }
 
 export interface AnalyzeImageRequest {
-  user_id: string;
   image_base64: string;
   tone: string;
   goal: string;
@@ -43,8 +63,8 @@ export const analyzeImage = async (data: AnalyzeImageRequest): Promise<AnalysisR
   return response.data;
 };
 
-export const getUserHistory = async (userId: string, limit: number = 20) => {
-  const response = await api.get(`/api/history/${userId}`, { params: { limit } });
+export const getUserHistory = async (limit: number = 20) => {
+  const response = await api.get('/api/history', { params: { limit } });
   return response.data;
 };
 
@@ -53,16 +73,14 @@ export const getAnalysisDetail = async (analysisId: string) => {
   return response.data;
 };
 
-export const checkSubscription = async (userId: string) => {
-  const response = await api.post('/api/subscription/check', null, {
-    params: { user_id: userId },
-  });
+export const getSubscriptionPlans = async () => {
+  const response = await api.get('/api/subscription/plans');
   return response.data;
 };
 
-export const mockActivateSubscription = async (userId: string) => {
-  const response = await api.post('/api/subscription/mock-activate', null, {
-    params: { user_id: userId },
+export const activateSubscription = async (plan: string, billing_period: string) => {
+  const response = await api.post('/api/subscription/activate', null, {
+    params: { plan, billing_period }
   });
   return response.data;
 };
