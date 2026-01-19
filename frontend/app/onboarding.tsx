@@ -11,37 +11,38 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { Ionicons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
-
-const onboardingSteps = [
-  {
-    icon: '💬',
-    title: 'AI-Powered Coaching',
-    description: 'Get instant feedback on any conversation with advanced AI analysis',
-  },
-  {
-    icon: '🎯',
-    title: 'Achieve Your Goals',
-    description: 'Whether it is dating, networking, or resolving conflicts - we have got you covered',
-  },
-  {
-    icon: '✨',
-    title: 'Match Your Style',
-    description: 'Choose from 6 communication tones to sound exactly how you want',
-  },
-  {
-    icon: '📸',
-    title: 'Analyze Anything',
-    description: 'Upload screenshots, paste text, or share images - we will help you respond',
-  },
-];
+import i18n from '../i18n';
 
 export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
-  const { completeOnboarding } = useStore();
+  const { completeOnboarding, language } = useStore();
   const scrollViewRef = useRef<ScrollView>(null);
+  
+  i18n.locale = language;
+  
+  const onboardingSteps = [
+    {
+      icon: '💬',
+      title: i18n.t('onboarding.step1.title'),
+      description: i18n.t('onboarding.step1.description'),
+    },
+    {
+      icon: '🎯',
+      title: i18n.t('onboarding.step2.title'),
+      description: i18n.t('onboarding.step2.description'),
+    },
+    {
+      icon: '✨',
+      title: i18n.t('onboarding.step3.title'),
+      description: i18n.t('onboarding.step3.description'),
+    },
+    {
+      icon: '📸',
+      title: i18n.t('onboarding.step4.title'),
+      description: i18n.t('onboarding.step4.description'),
+    },
+  ];
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -59,7 +60,7 @@ export default function OnboardingScreen() {
 
   const handleGetStarted = () => {
     completeOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/login');
   };
 
   return (
@@ -67,7 +68,7 @@ export default function OnboardingScreen() {
       <View style={styles.header}>
         {currentStep < onboardingSteps.length - 1 && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>{i18n.t('skip')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -106,7 +107,7 @@ export default function OnboardingScreen() {
 
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>
-            {currentStep === onboardingSteps.length - 1 ? "Get Started" : "Next"}
+            {currentStep === onboardingSteps.length - 1 ? i18n.t('getStarted') : i18n.t('next')}
           </Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
         </TouchableOpacity>
