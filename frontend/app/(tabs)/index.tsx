@@ -22,7 +22,7 @@ import { analyzeText, analyzeImage } from '../../services/api';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, updateSubscriptionStatus } = useStore();
+  const { user, updateSubscriptionStatus, isDarkMode } = useStore();
   const [showPaywall, setShowPaywall] = useState(false);
   const [analysisType, setAnalysisType] = useState<'text' | 'image' | null>(null);
   const [conversationText, setConversationText] = useState('');
@@ -33,6 +33,16 @@ export default function HomeScreen() {
   const [showTonePicker, setShowTonePicker] = useState(false);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  const colors = {
+    background: isDarkMode ? '#111827' : '#f9fafb',
+    card: isDarkMode ? '#1f2937' : '#fff',
+    text: isDarkMode ? '#f9fafb' : '#1f2937',
+    textSecondary: isDarkMode ? '#9ca3af' : '#6b7280',
+    border: isDarkMode ? '#374151' : '#e5e7eb',
+    primary: '#6366f1',
+    primaryLight: isDarkMode ? '#4f46e5' : '#eef2ff',
+  };
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -125,7 +135,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TalkTutor</Text>
         <Text style={styles.headerSubtitle}>Your AI Communication Coach</Text>
@@ -137,11 +147,15 @@ export default function HomeScreen() {
       >
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What do you want to analyze?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>¿Qué quieres analizar?</Text>
 
             <View style={styles.uploadOptions}>
               <TouchableOpacity
-                style={[styles.uploadButton, analysisType === 'text' && styles.uploadButtonActive]}
+                style={[
+                  styles.uploadButton, 
+                  { backgroundColor: colors.card, borderColor: analysisType === 'text' ? colors.primary : colors.border },
+                  analysisType === 'text' && { backgroundColor: colors.primaryLight }
+                ]}
                 onPress={() => {
                   setAnalysisType('text');
                   setSelectedImage(null);
@@ -150,33 +164,48 @@ export default function HomeScreen() {
                 <Ionicons
                   name="chatbubble-ellipses"
                   size={32}
-                  color={analysisType === 'text' ? '#6366f1' : '#6b7280'}
+                  color={analysisType === 'text' ? colors.primary : colors.textSecondary}
                 />
-                <Text style={[styles.uploadButtonText, analysisType === 'text' && styles.uploadButtonTextActive]}>
-                  Text
+                <Text style={[
+                  styles.uploadButtonText, 
+                  { color: analysisType === 'text' ? colors.primary : colors.textSecondary }
+                ]}>
+                  Texto
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.uploadButton, analysisType === 'image' && styles.uploadButtonActive]}
+                style={[
+                  styles.uploadButton, 
+                  { backgroundColor: colors.card, borderColor: analysisType === 'image' ? colors.primary : colors.border },
+                  analysisType === 'image' && { backgroundColor: colors.primaryLight }
+                ]}
                 onPress={pickImage}
               >
                 <Ionicons
                   name="image"
                   size={32}
-                  color={analysisType === 'image' ? '#6366f1' : '#6b7280'}
+                  color={analysisType === 'image' ? colors.primary : colors.textSecondary}
                 />
-                <Text style={[styles.uploadButtonText, analysisType === 'image' && styles.uploadButtonTextActive]}>
-                  Image
+                <Text style={[
+                  styles.uploadButtonText, 
+                  { color: analysisType === 'image' ? colors.primary : colors.textSecondary }
+                ]}>
+                  Imagen
                 </Text>
               </TouchableOpacity>
             </View>
 
             {analysisType === 'text' && (
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { 
+                  backgroundColor: colors.card, 
+                  borderColor: colors.border,
+                  color: colors.text 
+                }]}
                 multiline
-                placeholder="Paste your conversation here..."
+                placeholder="Pega tu conversación aquí..."
+                placeholderTextColor={colors.textSecondary}
                 value={conversationText}
                 onChangeText={setConversationText}
                 textAlignVertical="top"
@@ -184,23 +213,34 @@ export default function HomeScreen() {
             )}
 
             {analysisType === 'image' && selectedImage && (
-              <View style={styles.imagePreview}>
-                <Ionicons name="checkmark-circle" size={48} color="#10b981" />
-                <Text style={styles.imagePreviewText}>Image selected</Text>
-                <TouchableOpacity onPress={pickImage}>
-                  <Text style={styles.changeImageText}>Change Image</Text>
-                </TouchableOpacity>
+              <View style={[styles.imagePreview, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Image
+                  source={{ uri: `data:image/jpeg;base64,${selectedImage}` }}
+                  style={styles.imagePreviewImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.imagePreviewOverlay}>
+                  <TouchableOpacity onPress={pickImage} style={styles.changeImageButton}>
+                    <Ionicons name="camera" size={20} color="#fff" />
+                    <Text style={styles.changeImageText}>Cambiar Imagen</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
 
           {(analysisType === 'text' || analysisType === 'image') && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Additional Context (Optional)</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Contexto Adicional (Opcional)</Text>
               <TextInput
-                style={styles.contextInput}
+                style={[styles.contextInput, { 
+                  backgroundColor: colors.card, 
+                  borderColor: colors.border,
+                  color: colors.text 
+                }]}
                 multiline
-                placeholder="Add any extra context about the conversation, the person, or your situation..."
+                placeholder="Agrega contexto sobre la conversación, la persona o tu situación..."
+                placeholderTextColor={colors.textSecondary}
                 value={contextText}
                 onChangeText={setContextText}
                 textAlignVertical="top"
@@ -209,24 +249,24 @@ export default function HomeScreen() {
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>How do you want to sound?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>¿Cómo quieres sonar?</Text>
             <TouchableOpacity
-              style={styles.selector}
+              style={[styles.selector, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => setShowTonePicker(true)}
             >
-              <Text style={styles.selectorText}>{getToneLabel()}</Text>
-              <Ionicons name="chevron-down" size={20} color="#6b7280" />
+              <Text style={[styles.selectorText, { color: colors.text }]}>{getToneLabel()}</Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What is your goal?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>¿Cuál es tu objetivo?</Text>
             <TouchableOpacity
-              style={styles.selector}
+              style={[styles.selector, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => setShowGoalPicker(true)}
             >
-              <Text style={styles.selectorText}>{getGoalLabel()}</Text>
-              <Ionicons name="chevron-down" size={20} color="#6b7280" />
+              <Text style={[styles.selectorText, { color: colors.text }]}>{getGoalLabel()}</Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -432,24 +472,35 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   imagePreview: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    height: 300,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  imagePreviewText: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#10b981',
+  imagePreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePreviewOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 12,
+    alignItems: 'center',
+  },
+  changeImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   changeImageText: {
-    marginTop: 8,
     fontSize: 14,
-    color: '#6366f1',
+    color: '#fff',
+    fontWeight: '600',
   },
   selector: {
     backgroundColor: '#fff',

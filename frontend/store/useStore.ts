@@ -8,9 +8,11 @@ interface User {
 
 interface AppState {
   user: User | null;
+  isDarkMode: boolean;
   setUser: (user: User) => void;
   updateSubscriptionStatus: (isSubscribed: boolean) => void;
   completeOnboarding: () => void;
+  toggleDarkMode: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -19,6 +21,7 @@ export const useStore = create<AppState>((set) => ({
     isSubscribed: false,
     hasCompletedOnboarding: false,
   },
+  isDarkMode: false,
   setUser: (user) => set({ user }),
   updateSubscriptionStatus: (isSubscribed) =>
     set((state) => ({
@@ -28,4 +31,5 @@ export const useStore = create<AppState>((set) => ({
     set((state) => ({
       user: state.user ? { ...state.user, hasCompletedOnboarding: true } : null,
     })),
+  toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 }));
