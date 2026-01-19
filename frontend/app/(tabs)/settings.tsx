@@ -25,6 +25,29 @@ export default function SettingsScreen() {
     primaryLight: isDarkMode ? '#4f46e5' : '#eef2ff',
   };
 
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+  ];
+
+  const handleLogout = () => {
+    Alert.alert(
+      i18n.t('settings.logout'),
+      'Are you sure you want to log out?',
+      [
+        { text: i18n.t('cancel'), style: 'cancel' },
+        {
+          text: i18n.t('settings.logout'),
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/login');
+          },
+        },
+      ]
+    );
+  };
+
   const handleSubscriptionManagement = () => {
     if (user?.isSubscribed) {
       Alert.alert(
