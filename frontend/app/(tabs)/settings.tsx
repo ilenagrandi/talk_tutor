@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStore } from '../../store/useStore';
+import { useAuth } from '../../context/AuthContext';
+import i18n from '../../i18n';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, updateSubscriptionStatus, isDarkMode, toggleDarkMode } = useStore();
+  const { user, isDarkMode, toggleDarkMode, language, setLanguage } = useStore();
+  const { logout } = useAuth();
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   
   const colors = {
     background: isDarkMode ? '#111827' : '#f9fafb',
