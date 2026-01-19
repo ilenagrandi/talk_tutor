@@ -13,6 +13,8 @@ import { useStore } from '../store/useStore';
 import { Ionicons } from '@expo/vector-icons';
 import i18n from '../i18n';
 
+const { width } = Dimensions.get('window');
+
 export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
