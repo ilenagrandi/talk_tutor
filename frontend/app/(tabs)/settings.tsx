@@ -49,15 +49,26 @@ export default function SettingsScreen() {
   };
 
   const handleSubscriptionManagement = () => {
-    if (user?.isSubscribed) {
+    if (user?.subscription_plan) {
       Alert.alert(
-        'Subscription Active',
-        'Your subscription is currently active. In production, this would open subscription management.',
+        i18n.t('settings.subscription'),
+        `Current plan: ${user.subscription_plan}. In production, this would open subscription management.`,
         [{ text: 'OK' }]
       );
     } else {
       router.push('/subscription');
     }
+  };
+
+  const handleLanguageChange = async (langCode: string) => {
+    await setLanguage(langCode);
+    setShowLanguagePicker(false);
+    i18n.locale = langCode;
+  };
+
+  const getCurrentLanguageName = () => {
+    const lang = languages.find(l => l.code === language);
+    return lang ? `${lang.flag} ${lang.name}` : 'English';
   };
 
   const settingsOptions = [
