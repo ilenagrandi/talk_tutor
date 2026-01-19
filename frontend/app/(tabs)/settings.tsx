@@ -177,12 +177,18 @@ export default function SettingsScreen() {
                 onPress={item.onPress}
                 disabled={item.hasSwitch}
               >
-                <View style={[styles.settingIcon, { backgroundColor: colors.primaryLight }]}>
-                  <Ionicons name={item.icon as any} size={24} color={colors.primary} />
+                <View style={[styles.settingIcon, { backgroundColor: item.isDestructive ? '#fee2e2' : colors.primaryLight }]}>
+                  <Ionicons 
+                    name={item.icon as any} 
+                    size={24} 
+                    color={item.isDestructive ? '#ef4444' : colors.primary} 
+                  />
                 </View>
                 <View style={styles.settingContent}>
                   <View style={styles.settingHeader}>
-                    <Text style={[styles.settingLabel, { color: colors.text }]}>{item.label}</Text>
+                    <Text style={[styles.settingLabel, { color: item.isDestructive ? '#ef4444' : colors.text }]}>
+                      {item.label}
+                    </Text>
                     {item.badge && (
                       <View style={styles.badge}>
                         <Text style={styles.badgeText}>{item.badge}</Text>
