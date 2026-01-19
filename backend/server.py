@@ -160,7 +160,7 @@ Be concise but thorough."""
         
         prompt = "Analyze this image and extract all text, describe the content, and identify any social context or emotional tone."
         if context:
-            prompt += f"\n\nAdditional context from user: {context}"
+            prompt += f"\n\nAdditional context provided by user: {context}"
 
         message = UserMessage(
             text=prompt,
