@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const [analysisType, setAnalysisType] = useState<'text' | 'image' | null>(null);
   const [conversationText, setConversationText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [contextText, setContextText] = useState('');
   const [selectedTone, setSelectedTone] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('');
   const [showTonePicker, setShowTonePicker] = useState(false);
@@ -46,7 +47,7 @@ export default function HomeScreen() {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
 
-    const result = await ImagePicker.launchImagePickerAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
@@ -92,6 +93,7 @@ export default function HomeScreen() {
           image_base64: selectedImage,
           tone: selectedTone,
           goal: selectedGoal,
+          context: contextText || undefined,
         });
       }
 
@@ -191,6 +193,20 @@ export default function HomeScreen() {
               </View>
             )}
           </View>
+
+          {(analysisType === 'text' || analysisType === 'image') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Additional Context (Optional)</Text>
+              <TextInput
+                style={styles.contextInput}
+                multiline
+                placeholder="Add any extra context about the conversation, the person, or your situation..."
+                value={contextText}
+                onChangeText={setContextText}
+                textAlignVertical="top"
+              />
+            </View>
+          )}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>How do you want to sound?</Text>
@@ -404,6 +420,16 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     fontSize: 16,
     marginTop: 12,
+  },
+  contextInput: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    height: 100,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    fontSize: 15,
+    color: '#6b7280',
   },
   imagePreview: {
     backgroundColor: '#fff',
