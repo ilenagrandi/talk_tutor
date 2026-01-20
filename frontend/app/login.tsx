@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../store/useStore';
 import i18n from '../i18n';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { login, isLoading } = useAuth();
   const { isDarkMode, language } = useStore();
   
