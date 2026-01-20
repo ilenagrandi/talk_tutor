@@ -130,20 +130,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       if (sessionToken) {
-        await axios.post(
-          `${API_URL}/api/auth/logout`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${sessionToken}` }
-          }
-        );
+        try {
+          await axios.post(
+            `${API_URL}/api/auth/logout`,
+            {},
+            {
+              headers: { Authorization: `Bearer ${sessionToken}` }
+            }
+          );
+        } catch (error) {
+          console.error('Backend logout error:', error);
+          // Continue with local logout even if backend fails
+        }
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      await storeLogout();
+      // Always clear local state
       setUser(null);
       setSessionToken(null);
+      await storeLogout();
     }
   };
 
