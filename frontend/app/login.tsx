@@ -82,6 +82,16 @@ export default function LoginScreen() {
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             By continuing, you agree to our Terms of Service and Privacy Policy
           </Text>
+          
+          <TouchableOpacity 
+            style={styles.devButton}
+            onPress={() => router.push('/dev-login')}
+          >
+            <Ionicons name="code-slash" size={16} color="#6b7280" />
+            <Text style={[styles.devButtonText, { color: colors.textSecondary }]}>
+              Dev Login (Testing)
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -167,5 +177,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+    marginBottom: 16,
+  },
+  devButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
+  devButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
