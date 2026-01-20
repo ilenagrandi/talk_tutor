@@ -20,15 +20,17 @@ export default function SplashScreen() {
   const checkAndNavigate = async () => {
     await new Promise(resolve => setTimeout(resolve, 1500)); // Splash delay
     
-    if (!isAuthenticated) {
-      // Check if onboarding was completed
-      const onboardingCompleted = await AsyncStorage.getItem('onboarding_completed');
-      if (!onboardingCompleted) {
-        router.replace('/onboarding');
-      } else {
-        router.replace('/login');
-      }
+    // Check if onboarding was completed
+    const onboardingCompleted = await AsyncStorage.getItem('onboarding_completed');
+    
+    if (!onboardingCompleted) {
+      // First time user - show onboarding
+      router.replace('/onboarding');
+    } else if (!isAuthenticated) {
+      // Onboarding completed but not logged in - show login
+      router.replace('/login');
     } else {
+      // Already authenticated - go to app
       router.replace('/(tabs)');
     }
   };
