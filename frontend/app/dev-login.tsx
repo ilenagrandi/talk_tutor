@@ -17,8 +17,12 @@ export default function DevLoginScreen() {
   const createAndLoginTestUser = async () => {
     setLoading(true);
     try {
+      console.log('Creating test user...');
+      
       // Crear usuario de prueba con suscripción Pro
       const response = await axios.post(`${API_URL}/api/dev/create-test-user`);
+      console.log('Response:', response.data);
+      
       const { user_id, email, name, session_token, subscription_plan, subscription_expires } = response.data;
 
       // Guardar en store
@@ -31,20 +35,17 @@ export default function DevLoginScreen() {
       });
 
       await setSessionToken(session_token);
+      
+      console.log('User created and saved, redirecting...');
 
-      Alert.alert(
-        '✅ Usuario Creado',
-        `Email: ${email}\nPlan: ${subscription_plan.toUpperCase()}\n\n¡Ahora tienes acceso completo a toda la app!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)'),
-          },
-        ]
-      );
+      // Redirigir directamente sin alert
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 500);
+      
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create test user');
-    } finally {
+      console.error('Error creating test user:', error);
+      Alert.alert('Error', error.response?.data?.detail || error.message || 'Failed to create test user');
       setLoading(false);
     }
   };
