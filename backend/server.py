@@ -626,6 +626,45 @@ async def activate_subscription(
         "expires_at": expires_at.isoformat()
     }
 
+@app.post("/api/dev/create-test-user")
+async def create_test_user():
+    """DEVELOPMENT ONLY: Create a test user with premium access"""
+    
+    user_id = f"test_user_{uuid.uuid4().hex[:8]}"
+    session_token = f"test_session_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=365)
+    
+    # Create user with Pro subscription
+    user_doc = {
+        "user_id": user_id,
+        "email": f"{user_id}@talktutor.test",
+        "name": "Test User (Pro)",
+        "picture": None,
+        "created_at": datetime.now(timezone.utc),
+        "subscription_plan": "pro",
+        "subscription_expires": expires_at
+    }
+    users_collection.insert_one(user_doc)
+    
+    # Create session
+    session_doc = {
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+        "created_at": datetime.now(timezone.utc)
+    }
+    user_sessions_collection.insert_one(session_doc)
+    
+    return {
+        "user_id": user_id,
+        "email": user_doc["email"],
+        "name": user_doc["name"],
+        "session_token": session_token,
+        "subscription_plan": "pro",
+        "subscription_expires": expires_at.isoformat(),
+        "instructions": "Save this session_token and use it in AsyncStorage with key 'session_token'"
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
